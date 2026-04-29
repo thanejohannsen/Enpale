@@ -8,6 +8,16 @@ Format: reverse-chronological. Each entry has a date, a one-line summary, and de
 
 ## 2026-04-29
 
+### Frontend scaffolded — Vite + React 19 + Tailwind v4 + Router
+- **What:** Created `frontend/` via `npm create vite@latest` (react-ts template). Added Tailwind CSS v4 (via `@tailwindcss/vite` plugin, no separate config file — config-in-CSS), React Router v6, zustand, idb-keyval. Replaced boilerplate App.tsx with router that maps every page from the plan to a route. Each page is a stub backed by a shared `PageStub` component so we can click through the full nav skeleton.
+- **Why:** Phase 0 scaffold per IMPLEMENTATION_PLAN.md. Stubs let later phases be filled in incrementally without rewiring routes.
+- **Routes:** `/` (Welcome), `/village`, `/topics`, `/chat`, `/incubate/:enpaId`, `/enpa/:enpaId`, `/play/:enpaId`, `/leaderboard`, `*` → Welcome.
+- **Files:** `frontend/src/App.tsx`, `frontend/src/main.tsx`, `frontend/src/index.css`, `frontend/src/components/PageStub.tsx`, `frontend/src/pages/*.tsx` (8 stubs), `frontend/src/api/client.ts`, `frontend/vite.config.ts`, `frontend/index.html`.
+- **Vite proxy:** `/api` → `http://localhost:8000`, so frontend fetches go through Vite to FastAPI without CORS in dev.
+- **Boilerplate removed:** `src/App.css`, `src/assets/`, `public/icons.svg`.
+- **Verified:** `npm run build` succeeds (33 modules, 75KB gzip JS, 3.5KB gzip CSS). Dev server boots on `localhost:5173` and serves the React shell. Note: on Windows, use `localhost` not `127.0.0.1` — Vite binds IPv6-first.
+- **Follow-ups:** Wire `apiGet/apiPost` to FastAPI `/healthz` from a page to confirm dev proxy works (Phase 1). Add `.env.example` for `VITE_API_BASE` if/when we move off the proxy.
+
 ### Backend scaffolded — FastAPI skeleton with Anthropic smoke test
 - **What:** Created `backend/` with FastAPI app, `/healthz` and `/smoke/claude` endpoints, Anthropic SDK client wrapper, pydantic-settings config, CORS for the Vite dev server, and `.env.example` template.
 - **Why:** Phase 0 of IMPLEMENTATION_PLAN.md — minimum viable backend that proves the Claude API call works and is ready for the 3-model pipeline to be layered on top.
