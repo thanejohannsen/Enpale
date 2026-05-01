@@ -8,6 +8,31 @@ Format: reverse-chronological. Each entry has a date, a one-line summary, and de
 
 ## 2026-04-30
 
+### Phase 2 — Model 1 (Sparky interest discovery) live end-to-end
+- **What:** Built the full interest-discovery pipeline. Backend: 3 endpoints under `/api/v1/interest/*` that orchestrate Claude calls. Frontend: 24-card topic grid + real-time Sparky chat UI + finalize flow. Verified end-to-end against live Claude API with the kid persona "Alex, age 9, picks space + robots."
+- **Why:** Phase 2 of IMPLEMENTATION_PLAN.md. Model 1 is the first AI-driven step of the village hatching loop — its `InterestProfile` output is the input to Model 2 (game design) in Phase 3.
+- **Backend files:**
+  - `app/utils/json_utils.py` — `extract_json()` (strips markdown fences, raises on bad JSON for retry); `sanitize_kid_input()` (strips `<>{}` to prevent prompt injection inside `<kid_message>` XML tags)
+  - `app/models/interest_profile.py` — Pydantic models: `ChatMessage`, `TopicSelectRequest/Response`, `ChatRequest/Response`, `FinalizeRequest`, `InterestProfile`
+  - `app/prompts/interest_prompts.py` — `SPARKY_SYSTEM_PROMPT` (one-question-per-turn, kid voice, never says "educational"/"learning"/"curriculum", `[READY_TO_BUILD]` token after 3-5 turns), `SPARKY_OPENING_USER_TEMPLATE`, `FINALIZE_SYSTEM_PROMPT` (raw JSON output, low temp)
+  - `app/services/interest_service.py` — `start_session()`, `chat_turn()`, `finalize_profile()`. Wraps every kid message in `<kid_message>` tags after sanitizing. Includes one-shot retry with reinforced instruction if finalize JSON parse fails.
+  - `app/routers/interest.py` — 3 POST endpoints with key-presence guard
+  - `app/main.py` — mounted under `/api/v1` prefix
+- **Frontend files:**
+  - `src/types/index.ts` — added `ChatMessage`, `TopicCard`, `InterestProfile`, `GameStyle`, `AttentionSpan`, `ChatRole`
+  - `src/data/topicCards.ts` — 24 topic cards (id, label, emoji): space, dinosaurs, animals, ocean, robots, cars, sports, cooking, music, art, building, magic, superheroes, math, coding, nature, weather, history, mythology, skateboarding, pets, trains, crafts, mystery
+  - `src/store/sessionStore.ts` — extended with `selectedTopicIds`, `history`, `openingMessage`, `interestProfile`; new actions for session lifecycle
+  - `src/hooks/useInterestChat.ts` — `startSession`, `sendMessage`, `finalize` actions; tracks `sending`/`readyToBuild`/`error`
+  - `src/pages/TopicSelectPage.tsx` — 24-card grid (3-4 cols), pick 1–4, max-pick disable, calls `/interest/topics` on continue, navigates to `/chat`
+  - `src/pages/ChatPage.tsx` — message-bubble UI with auto-scroll, typing dots, "Hatch my egg!" CTA appears when backend signals `ready_to_build=true`. Phase 2 stops at finalize: shows the InterestProfile via console+alert and returns to village. Phase 3 will replace this with Enpa creation + navigation to `/incubate/:enpaId`.
+- **Verified end-to-end with live Claude (claude-sonnet-4-6):**
+  - `/healthz`: `anthropic_key_set:true` ✓
+  - `/smoke/claude`: returns "enpale is online" ✓
+  - 4-turn Alex+Mars+lasers session triggered `ready_to_build=true` after the kid mentioned "an hour" + collection ✓
+  - `/interest/finalize` returned a clean `InterestProfile` with `primary_interest: "driving a robot on Mars to dig for alien fossils"`, `preferred_game_style: action`, `attention_span_signal: medium`, 7 verbatim excitement keywords (incl. "ZAP"), 3 quotes, well-structured 3-sentence chat_summary written for an AI game designer ✓
+- **Tokens used in test:** roughly 200 input / 150 output per chat turn, ~800 / 500 for finalize. ~$0.01–0.02 for a full 4-turn session at sonnet-4-6 list pricing.
+- **Follow-ups:** Phase 3 — Model 2 (3-stage game design chain incl. rarity scoring + checkpoint authoring). Will need to add `app/models/game_design.py`, `app/prompts/design_prompts.py`, `app/services/design_service.py`, `app/routers/design.py`. ChatPage finalize handler will create an Enpa record and navigate to IncubationPage.
+
 ### Phase 1 — Repository layer, types, WelcomePage, VillagePage
 - **What:** Full persistence foundation for the MVP. Typed data models, repository interface + localStorage implementation, Zustand session store, hooks for reacting to data changes, and the first two real pages.
 - **Why:** Phase 1 of IMPLEMENTATION_PLAN.md. Establishes the swap-point architecture (swap `repository/index.ts` exports when moving to API-backed persistence in Phase 2+) and gives us a clickable first-run flow.

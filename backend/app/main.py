@@ -2,9 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.routers import interest as interest_router
 from app.services.claude_client import get_claude_client
 
-app = FastAPI(title="Enpale API", version="0.0.1")
+app = FastAPI(title="Enpale API", version="0.0.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,6 +14,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# All product endpoints live under /api/v1
+app.include_router(interest_router.router, prefix="/api/v1")
 
 
 @app.get("/healthz")

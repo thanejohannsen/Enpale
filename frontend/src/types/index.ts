@@ -1,6 +1,34 @@
 export type AgeGroup = 'early_elementary' | 'late_elementary' | 'middle_school'
 export type RarityTier = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 export type EnpaStatus = 'incubating' | 'hatched' | 'leveled'
+export type GameStyle = 'building' | 'action' | 'puzzle' | 'exploring'
+export type AttentionSpan = 'short' | 'medium' | 'long'
+export type ChatRole = 'user' | 'assistant'
+
+export interface ChatMessage {
+  role: ChatRole
+  content: string
+}
+
+export interface TopicCard {
+  id: string
+  label: string
+  emoji: string
+}
+
+export interface InterestProfile {
+  session_id: string
+  kid_name: string
+  age: number
+  age_group: AgeGroup
+  primary_interest: string
+  secondary_interests: string[]
+  excitement_keywords: string[]
+  preferred_game_style: GameStyle
+  attention_span_signal: AttentionSpan
+  chat_summary: string
+  notable_quotes: string[]
+}
 
 export interface KidProfile {
   id: string
