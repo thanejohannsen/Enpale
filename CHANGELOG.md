@@ -6,6 +6,26 @@ Format: reverse-chronological. Each entry has a date, a one-line summary, and de
 
 ---
 
+## 2026-04-30
+
+### Phase 1 — Repository layer, types, WelcomePage, VillagePage
+- **What:** Full persistence foundation for the MVP. Typed data models, repository interface + localStorage implementation, Zustand session store, hooks for reacting to data changes, and the first two real pages.
+- **Why:** Phase 1 of IMPLEMENTATION_PLAN.md. Establishes the swap-point architecture (swap `repository/index.ts` exports when moving to API-backed persistence in Phase 2+) and gives us a clickable first-run flow.
+- **Files added:**
+  - `frontend/src/types/index.ts` — `KidProfile`, `Enpa`, `Checkpoint`, `EggColorPalette`, `AgeGroup`, `RarityTier`, `EnpaStatus`
+  - `frontend/src/repository/types.ts` — `KidProfileRepository` + `EnpaRepository` interfaces
+  - `frontend/src/repository/localStorageRepo.ts` — localStorage impl (Enpa metadata), idb-keyval (HTML blobs), emitters for hook re-renders
+  - `frontend/src/repository/index.ts` — single named export; swap point for Phase 2 API repo
+  - `frontend/src/store/sessionStore.ts` — Zustand: `sessionId`, `incubatingEnpaId` (ephemeral pipeline state only)
+  - `frontend/src/hooks/useKidProfile.ts` — subscribes to `kidProfileEmitter`, returns `{ profile, loading }`
+  - `frontend/src/hooks/useEnpaCollection.ts` — subscribes to `enpaCollectionEmitter`, returns `{ enpas, loading }`
+- **Pages updated:**
+  - `WelcomePage.tsx` — real form (name + age), validates, computes `ageGroup`, saves `KidProfile` via repo, redirects to village; checks on mount if profile exists and skips straight to village
+  - `VillagePage.tsx` — reads `KidProfile` via hook, redirects to `/` if missing, shows header (name/XP/stats), empty-state egg placeholder, Enpa grid stub, floating "Hatch" CTA, leaderboard tab link
+- **Storage layout:** `localStorage['enpale.kid_profile']` (KidProfile JSON), `localStorage['enpale.enpas']` (Enpa[] JSON, no HTML), IndexedDB key `enpale.enpa_html.<enpaId>` (HTML blob per Enpa)
+- **Verified:** `tsc -b` passes with zero errors.
+- **Follow-ups:** Phase 2 — topic cards (TopicSelectPage) + Sparky chat (ChatPage) + backend interest endpoints.
+
 ## 2026-04-29
 
 ### Frontend scaffolded — Vite + React 19 + Tailwind v4 + Router
